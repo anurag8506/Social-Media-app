@@ -2,23 +2,29 @@ const nodemailer = require('nodemailer');
 const FormSubmission = require('../models/conatct'); // Your Mongoose model
 
 // Email transporter configuration
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   host: "smtp.gmail.com",
+//   secure: true,
+//   secureConnection: false,
+//   tls: {
+//     rejectUnauthorized: false
+//   },
+//   requireTLS: true,
+//   port: 465,
+//   debug: true,
+//   auth: {
+//     user: process.env.USER || "verma.akash2025@gmail.com",
+//     pass: process.env.PASS || "dchlmfpimhsaqbqc"
+//   }
+// });
 const transporter = nodemailer.createTransport({
   service: 'gmail',
-  host: "smtp.gmail.com",
-  secure: true,
-  secureConnection: false,
-  tls: {
-    rejectUnauthorized: false
-  },
-  requireTLS: true,
-  port: 465,
-  debug: true,
   auth: {
-    user: process.env.USER || "verma.akash2025@gmail.com",
-    pass: process.env.PASS || "dchlmfpimhsaqbqc"
+    user:process.env.MAIL_EMAIL,
+    pass: process.env.MAIL_PASSWORD
   }
 });
-
 exports.ContactForm = async (req, res) => {
   try {
     const { name, email,message } = req.body;
