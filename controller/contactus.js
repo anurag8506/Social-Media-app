@@ -20,12 +20,17 @@ const FormSubmission = require('../models/inquirey'); // Your Mongoose model
 // });
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
-    user:process.env.MAIL_EMAIL,
-    pass: process.env.MAIL_PASSWORD
+    user: process.env.MAIL_EMAIL || "verma.akash2025@gmail.com",
+    pass: process.env.MAIL_PASSWORD || "dchlmfpimhsaqbqc" // Never hardcode passwords!
+  },
+  tls: {
+    rejectUnauthorized: false // Only for testing
   }
 });
-
 exports.submitForm = async (req, res) => {
   try {
     const { name, email, company, website, projectType, services } = req.body;
