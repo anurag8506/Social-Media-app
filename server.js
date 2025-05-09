@@ -2,11 +2,12 @@ const express = require('express')
 const path=require('path')
 const app = express()
 const adminRoutes = require('./routers/adminRoutes')
-
+const websiteRoute = require('./routers/apiRoutes')
 const cookieParser = require('cookie-parser');
 const cors = require('cors')
 const connectDB = require('./config/DB');
 const migrateCategories = require('./config/migrate')
+
 require('dotenv').config()
 
 
@@ -39,6 +40,8 @@ app.use("/", express.static(path.join(__dirname, "/public")));
 
 
 app.use('/api/admin', adminRoutes)
+
+app.use('/api', websiteRoute)
 
 
 
