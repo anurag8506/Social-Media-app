@@ -149,13 +149,14 @@ exports.getProjectById = async (req, res) => {
 };
 
 // Update project
+
 exports.updateProject = async (req, res) => {
   try {
-    const projectId = req.params.projects_id; // Get project ID from URL parameters
-    
+    const projectId = req.params.projects_id;
+
     // Find the existing project
     const existingProject = await Project.findOne({ projects_id: projectId });
-    
+
     if (!existingProject) {
       return res.status(404).json({
         success: false,
@@ -163,70 +164,70 @@ exports.updateProject = async (req, res) => {
       });
     }
 
-    // Function to process files and remove the path prefix
+    // Function to remove 'public/assets/uploads/' from file paths
+    const removeUploadPrefix = (filePath) => {
+      const normalizedPath = filePath.split(path.sep).join('/'); // Normalize slashes
+      return normalizedPath.replace('public/assets/uploads/', '');
+    };
+
     const processUploadedFiles = (files, fieldName) => {
       if (!files || !files[fieldName]) return [];
-      
-      return files[fieldName].map(file => {
-        // Remove "public\\assets\\uploads\\" from the path
-        return file.path.replace('public\\assets\\uploads\\', '');
-      });
+      return files[fieldName].map(file => removeUploadPrefix(file.path));
     };
-    
-    // Process single file path
+
     const processSingleFilePath = (file) => {
       if (!file) return null;
-      return file.path.replace('public\\assets\\uploads\\', '');
+      return removeUploadPrefix(file.path);
     };
-    
-    // Process all new file uploads
+
+    // Process new file uploads
     const mainBannerImages = processUploadedFiles(req.files, 'mainBanner');
     const projectImages = processUploadedFiles(req.files, 'projectImages');
     const teamImages = processUploadedFiles(req.files, 'teamImages');
-    
-    // Process single file uploads
-    const companyLogo = req.files?.companyLogo?.[0] ?
-      processSingleFilePath(req.files.companyLogo[0]) : null;
-    
-    const reviewPersonImage = req.files?.reviewPersonImage?.[0] ?
-      processSingleFilePath(req.files.reviewPersonImage[0]) : null;
-    
-    // Handle existing files
-    const updatedMainBanner = mainBannerImages.length > 0 
-      ? mainBannerImages 
-      : req.body.existingMainBanner 
-        ? Array.isArray(req.body.existingMainBanner) 
-          ? req.body.existingMainBanner 
+
+    const companyLogo = req.files?.companyLogo?.[0]
+      ? processSingleFilePath(req.files.companyLogo[0])
+      : null;
+
+    const reviewPersonImage = req.files?.reviewPersonImage?.[0]
+      ? processSingleFilePath(req.files.reviewPersonImage[0])
+      : null;
+
+    // Handle existing + new files
+    const updatedMainBanner = mainBannerImages.length > 0
+      ? mainBannerImages
+      : req.body.existingMainBanner
+        ? Array.isArray(req.body.existingMainBanner)
+          ? req.body.existingMainBanner
           : [req.body.existingMainBanner]
         : existingProject.mainBanner;
-        
-    const updatedProjectImages = projectImages.length > 0 
-      ? projectImages 
-      : req.body.existingProjectImages 
-        ? Array.isArray(req.body.existingProjectImages) 
-          ? req.body.existingProjectImages 
+
+    const updatedProjectImages = projectImages.length > 0
+      ? projectImages
+      : req.body.existingProjectImages
+        ? Array.isArray(req.body.existingProjectImages)
+          ? req.body.existingProjectImages
           : [req.body.existingProjectImages]
         : existingProject.projectImages;
-        
-    const updatedTeamImages = teamImages.length > 0 
-      ? teamImages 
-      : req.body.existingTeamImages 
-        ? Array.isArray(req.body.existingTeamImages) 
-          ? req.body.existingTeamImages 
+
+    const updatedTeamImages = teamImages.length > 0
+      ? teamImages
+      : req.body.existingTeamImages
+        ? Array.isArray(req.body.existingTeamImages)
+          ? req.body.existingTeamImages
           : [req.body.existingTeamImages]
         : existingProject.teamImages;
-        
+
     const updatedCompanyLogo = companyLogo || req.body.existingCompanyLogo || existingProject.companyLogo;
     const updatedReviewPersonImage = reviewPersonImage || req.body.existingReviewPersonImage || existingProject.reviewPersonImage;
-    
-    // Handle team members array
+
     const teamMembers = Array.isArray(req.body.projectTeamMembers)
       ? req.body.projectTeamMembers
       : req.body.projectTeamMembers
         ? [req.body.projectTeamMembers]
         : existingProject.projectTeamMembers;
-    
-    // Update project data
+
+    // Prepare update data
     const projectData = {
       companyName: req.body.companyName || existingProject.companyName,
       projectName: req.body.projectName || existingProject.projectName,
@@ -245,20 +246,20 @@ exports.updateProject = async (req, res) => {
       teamImages: updatedTeamImages,
       updatedAt: Date.now()
     };
-    
-    // Update the project
+
+    // Update in DB
     const updatedProject = await Project.findOneAndUpdate(
       { projects_id: projectId },
       { $set: projectData },
       { new: true }
     );
-    
+
     res.status(200).json({
       success: true,
       data: updatedProject,
       message: 'Project updated successfully'
     });
-    
+
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -267,6 +268,125 @@ exports.updateProject = async (req, res) => {
     });
   }
 };
+
+// exports.updateProject = async (req, res) => {
+//   try {
+//     const projectId = req.params.projects_id; // Get project ID from URL parameters
+    
+//     // Find the existing project
+//     const existingProject = await Project.findOne({ projects_id: projectId });
+    
+//     if (!existingProject) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Project not found'
+//       });
+//     }
+
+//     // Function to process files and remove the path prefix
+//     const processUploadedFiles = (files, fieldName) => {
+//       if (!files || !files[fieldName]) return [];
+      
+//       return files[fieldName].map(file => {
+//         // Remove "public\\assets\\uploads\\" from the path
+//         return file.path.replace('public\\assets\\uploads\\', '');
+//       });
+//     };
+    
+//     // Process single file path
+//     const processSingleFilePath = (file) => {
+//       if (!file) return null;
+//       return file.path.replace('public\\assets\\uploads\\', '');
+//     };
+    
+//     // Process all new file uploads
+//     const mainBannerImages = processUploadedFiles(req.files, 'mainBanner');
+//     const projectImages = processUploadedFiles(req.files, 'projectImages');
+//     const teamImages = processUploadedFiles(req.files, 'teamImages');
+    
+//     // Process single file uploads
+//     const companyLogo = req.files?.companyLogo?.[0] ?
+//       processSingleFilePath(req.files.companyLogo[0]) : null;
+    
+//     const reviewPersonImage = req.files?.reviewPersonImage?.[0] ?
+//       processSingleFilePath(req.files.reviewPersonImage[0]) : null;
+    
+//     // Handle existing files
+//     const updatedMainBanner = mainBannerImages.length > 0 
+//       ? mainBannerImages 
+//       : req.body.existingMainBanner 
+//         ? Array.isArray(req.body.existingMainBanner) 
+//           ? req.body.existingMainBanner 
+//           : [req.body.existingMainBanner]
+//         : existingProject.mainBanner;
+        
+//     const updatedProjectImages = projectImages.length > 0 
+//       ? projectImages 
+//       : req.body.existingProjectImages 
+//         ? Array.isArray(req.body.existingProjectImages) 
+//           ? req.body.existingProjectImages 
+//           : [req.body.existingProjectImages]
+//         : existingProject.projectImages;
+        
+//     const updatedTeamImages = teamImages.length > 0 
+//       ? teamImages 
+//       : req.body.existingTeamImages 
+//         ? Array.isArray(req.body.existingTeamImages) 
+//           ? req.body.existingTeamImages 
+//           : [req.body.existingTeamImages]
+//         : existingProject.teamImages;
+        
+//     const updatedCompanyLogo = companyLogo || req.body.existingCompanyLogo || existingProject.companyLogo;
+//     const updatedReviewPersonImage = reviewPersonImage || req.body.existingReviewPersonImage || existingProject.reviewPersonImage;
+    
+//     // Handle team members array
+//     const teamMembers = Array.isArray(req.body.projectTeamMembers)
+//       ? req.body.projectTeamMembers
+//       : req.body.projectTeamMembers
+//         ? [req.body.projectTeamMembers]
+//         : existingProject.projectTeamMembers;
+    
+//     // Update project data
+//     const projectData = {
+//       companyName: req.body.companyName || existingProject.companyName,
+//       projectName: req.body.projectName || existingProject.projectName,
+//       projectLink: req.body.projectLink || existingProject.projectLink,
+//       projectType: req.body.projectType || existingProject.projectType,
+//       companyLogo: updatedCompanyLogo,
+//       mainBanner: updatedMainBanner,
+//       projectImages: updatedProjectImages,
+//       shortDescription: req.body.shortDescription || existingProject.shortDescription,
+//       description: req.body.description || existingProject.description,
+//       mainDescription: req.body.mainDescription || existingProject.mainDescription,
+//       reviewText: req.body.reviewText || existingProject.reviewText,
+//       reviewPersonName: req.body.reviewPersonName || existingProject.reviewPersonName,
+//       reviewPersonImage: updatedReviewPersonImage,
+//       projectTeamMembers: teamMembers,
+//       teamImages: updatedTeamImages,
+//       updatedAt: Date.now()
+//     };
+    
+//     // Update the project
+//     const updatedProject = await Project.findOneAndUpdate(
+//       { projects_id: projectId },
+//       { $set: projectData },
+//       { new: true }
+//     );
+    
+//     res.status(200).json({
+//       success: true,
+//       data: updatedProject,
+//       message: 'Project updated successfully'
+//     });
+    
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error'
+//     });
+//   }
+// };
 // exports.updateProject = async (req, res) => {
 //   try {
 //     const project = await Project.findOne({ projects_id: req.params.projects_id });
