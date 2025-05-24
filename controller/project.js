@@ -61,7 +61,7 @@ exports.createProject = async (req, res) => {
       companyName: req.body.companyName,
       projectName: req.body.projectName,
       projectLink: req.body.projectLink,
-      projectType: req.body.projectType,
+       projectType: req.body.projectType || null,
       companyLogo,
       mainBanner: mainBannerImages,
       projectImages,

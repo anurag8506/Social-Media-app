@@ -9,7 +9,7 @@ const projectSchema = new mongoose.Schema({
   projectType: { 
     type: String, 
     default: null,  // Allow null/undefined
-    enum: [null, "web", "app", "other"], // Optional: Define allowed values
+
   },
   companyLogo: { type: String, required: false },
   mainBanner: { type: [String], required: false }, // Changed to array

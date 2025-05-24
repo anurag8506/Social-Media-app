@@ -90,7 +90,7 @@ const productSchema = new mongoose.Schema({
     tags: [String],
     status: {
         type: String,
-        enum: ['draft', 'public', 'unpublic', 'out_of_stock'],
+
         default: 'draft'
     },
     variations: {
