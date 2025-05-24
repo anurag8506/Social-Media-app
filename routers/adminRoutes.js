@@ -23,16 +23,16 @@ router.delete('/blogs_delete/:blogs_id', deleteBlog);
 // router.post('/add_projects', upload.any('images'), createProject);
 router.post('/add_projects', upload.fields([
   { name: 'companyLogo', maxCount: 1 },
-  { name: 'mainBanner', maxCount: 1000 },
-  { name: 'projectImages', maxCount: 1000 },
+  { name: 'mainBanner', maxCount: 100 },
+  { name: 'projectImages', maxCount: 100 },
   { name: 'reviewPersonImage', maxCount: 1 },
-  { name: 'teamImages', maxCount: 1000 }
+  { name: 'teamImages', maxCount: 100 }
 ]), projectController.createProject);
 router.put('/update_project/:projects_id', upload.fields([
   { name: 'companyLogo', maxCount: 1 },
-  { name: 'mainBanner', maxCount: 1000 },
-  { name: 'projectImages', maxCount: 1000 },
-  { name: 'teamImages', maxCount: 1000 },
+  { name: 'mainBanner', maxCount: 100 },
+  { name: 'projectImages', maxCount: 100 },
+  { name: 'teamImages', maxCount: 100 },
   { name: 'reviewPersonImage', maxCount: 1 }
 ]), projectController.updateProject);
 router.get("/get_projects",projectController.fetchProjects);
