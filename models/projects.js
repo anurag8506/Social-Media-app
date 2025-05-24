@@ -6,7 +6,11 @@ const projectSchema = new mongoose.Schema({
   projects_id: { type: String, required: false },
   projectName: { type: String, required: false },
   projectLink: { type: String, required: false },
-  projectType: { type: String},
+  projectType: { 
+    type: String, 
+    default: null,  // Allow null/undefined
+    enum: [null, "web", "app", "other"], // Optional: Define allowed values
+  },
   companyLogo: { type: String, required: false },
   mainBanner: { type: [String], required: false }, // Changed to array
   projectImages: { type: [String], required: false }, // New field
