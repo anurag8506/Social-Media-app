@@ -232,7 +232,7 @@ exports.updateProject = async (req, res) => {
       companyName: req.body.companyName || existingProject.companyName,
       projectName: req.body.projectName || existingProject.projectName,
       projectLink: req.body.projectLink || existingProject.projectLink,
-      projectType: req.body.projectType || existingProject.projectType,
+      // projectType: req.body.projectType || existingProject.projectType,
       companyLogo: updatedCompanyLogo,
       mainBanner: updatedMainBanner,
       projectImages: updatedProjectImages,
