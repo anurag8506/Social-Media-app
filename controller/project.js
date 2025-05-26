@@ -90,7 +90,7 @@ exports.createProject = async (req, res) => {
   }
 };
 
-// Get all projects
+
 
 exports.fetchProjects = async (req, res) => {
   try {

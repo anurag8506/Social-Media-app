@@ -48,24 +48,39 @@ exports.getAllBlogs = async (req, res) => {
 };
 
 // Get a single blog by ID
+
+// exports.getBlogById  = async (req, res) => {
+//   try {
+//     const blog = await Blog.findOne({ blogs_id: req.params.blogs_id });
+//     if (!blog) return res.status(404).json({ error: "Blog not found" });
+//     res.json(blog);
+//   } catch (err) {
+//     res.status(500).json({ error: "Error fetching blog" });
+//   }
+// };
 exports.getBlogById = async (req, res) => {
   try {
-    const blog = await Blog.findOne({ blogs_id: req.params.id });
-    
+    // Find the requested blog
+    const blog = await Blog.findOne({ blogs_id: req.params.blogs_id });
     if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: 'Blog not found'
-      });
+      return res.status(404).json({ error: "Blog not found" });
     }
-    
-    res.status(200).json(blog);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
+    const relatedBlogs = await Blog.find({
+      blog_type: blog.blog_type,
+      blogs_id: { $ne: blog.blogs_id } // Exclude current blog
+    })
+    .limit(3) // Limit to 3 related blogs
+    .select('blogs_id blog_title blog_short_description images createdAt'); // Select only necessary fields
+
+    // Return both the blog and related blogs
+    res.json({
+      blog,
+      relatedBlogs
     });
+
+  } catch (err) {
+    console.error("Error fetching blog:", err);
+    res.status(500).json({ error: "Error fetching blog" });
   }
 };
 

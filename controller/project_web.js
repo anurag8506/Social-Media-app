@@ -7,10 +7,11 @@ exports.getAllProjects = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const projects = await Project.find()
+     .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
-
+    
     const totalProjects = await Project.countDocuments();
 
     res.json({
