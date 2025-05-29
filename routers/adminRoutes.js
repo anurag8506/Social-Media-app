@@ -39,6 +39,7 @@ router.get("/get_projects",projectController.fetchProjects);
 router.get("/get_projectsbyID/:projects_id",projectController.getProjectById);
 // router.put("/update_project/:projects_id",projectController.updateProject);
 router.delete("/project_delete/:projects_id",projectController.deleteProject);
+router.delete('/delete_project_image/:project_id', projectController.deleteImageByIndex);
 // end project section
 
 

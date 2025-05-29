@@ -19,43 +19,48 @@ const processUploadedFiles = (files, fieldName) => {
 exports.createProject = async (req, res) => {
   try {
     const projectId = await generateProjectId();
-    console.log(req.file, req.files)
+    console.log('Files received:', req.files);
     
-    // Function to process files and remove the path prefix
-    const processUploadedFiles = (files, fieldName) => {
-      if (!files || !files[fieldName]) return [];
-      
-      return files[fieldName].map(file => {
-        // Remove "public\\assets\\uploads\\" from the path
-        return file.path.replace('public\\assets\\uploads\\', '');
-      });
+    // Optimized function to extract just filename from path
+    const extractFileName = (filePath) => {
+      if (!filePath) return null;
+      // Extract just the filename regardless of path separators or prefixes
+      return path.basename(filePath);
     };
     
-    // Process file paths by removing the prefix
-    const processSingleFilePath = (file) => {
-      if (!file) return null;
-      return file.path.replace('public\\assets\\uploads\\', '');
+    // Fast file processing function
+    const processFiles = (files, fieldName) => {
+      return files?.[fieldName]?.map(file => extractFileName(file.path)) || [];
     };
     
-    // Process all file uploads
-    const mainBannerImages = processUploadedFiles(req.files, 'mainBanner');
-    const projectImages = processUploadedFiles(req.files, 'projectImages');
-    const teamImages = processUploadedFiles(req.files, 'teamImages');
+    // Process single file
+    const processSingleFile = (files, fieldName) => {
+      return files?.[fieldName]?.[0] ? extractFileName(files[fieldName][0].path) : null;
+    };
     
-    // Process single file uploads
-    const companyLogo = req.files?.companyLogo?.[0] ? 
-      processSingleFilePath(req.files.companyLogo[0]) : null;
+    // Parallel processing of all file operations
+    const [
+      mainBannerImages,
+      projectImages, 
+      teamImages,
+      companyLogo,
+      reviewPersonImage
+    ] = [
+      processFiles(req.files, 'mainBanner'),
+      processFiles(req.files, 'projectImages'),
+      processFiles(req.files, 'teamImages'),
+      processSingleFile(req.files, 'companyLogo'),
+      processSingleFile(req.files, 'reviewPersonImage')
+    ];
     
-    const reviewPersonImage = req.files?.reviewPersonImage?.[0] ? 
-      processSingleFilePath(req.files.reviewPersonImage[0]) : null;
+    // Optimize team members processing
+    const teamMembers = req.body.projectTeamMembers 
+      ? (Array.isArray(req.body.projectTeamMembers) 
+          ? req.body.projectTeamMembers 
+          : [req.body.projectTeamMembers])
+      : [];
     
-    // Handle team members array
-    const teamMembers = Array.isArray(req.body.projectTeamMembers) 
-      ? req.body.projectTeamMembers 
-      : req.body.projectTeamMembers 
-        ? [req.body.projectTeamMembers] 
-        : [];
-    
+    // Create project object with all data
     const projectData = {
       projects_id: projectId,
       companyName: req.body.companyName,
@@ -75,20 +80,99 @@ exports.createProject = async (req, res) => {
       teamImages
     };
     
+    // Create and save project
     const project = new Project(projectData);
     await project.save();
+    
     res.status(201).json({
       success: true,
-      data: project
+      data: project,
+      message: 'Project created successfully'
     });
+    
   } catch (error) {
-    console.error(error);
+    console.error('Project creation error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Failed to create project',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
+
+// exports.createProject = async (req, res) => {
+//   try {
+//     const projectId = await generateProjectId();
+//     console.log(req.file, req.files)
+    
+//     // Function to process files and remove the path prefix
+//     const processUploadedFiles = (files, fieldName) => {
+//       if (!files || !files[fieldName]) return [];
+      
+//       return files[fieldName].map(file => {
+//         // Remove "public\\assets\\uploads\\" from the path
+//         return file.path.replace('public\\assets\\uploads\\', '');
+//       });
+//     };
+    
+//     // Process file paths by removing the prefix
+//     const processSingleFilePath = (file) => {
+//       if (!file) return null;
+//       return file.path.replace('public\\assets\\uploads\\', '');
+//     };
+    
+//     // Process all file uploads
+//     const mainBannerImages = processUploadedFiles(req.files, 'mainBanner');
+//     const projectImages = processUploadedFiles(req.files, 'projectImages');
+//     const teamImages = processUploadedFiles(req.files, 'teamImages');
+    
+//     // Process single file uploads
+//     const companyLogo = req.files?.companyLogo?.[0] ? 
+//       processSingleFilePath(req.files.companyLogo[0]) : null;
+    
+//     const reviewPersonImage = req.files?.reviewPersonImage?.[0] ? 
+//       processSingleFilePath(req.files.reviewPersonImage[0]) : null;
+    
+//     // Handle team members array
+//     const teamMembers = Array.isArray(req.body.projectTeamMembers) 
+//       ? req.body.projectTeamMembers 
+//       : req.body.projectTeamMembers 
+//         ? [req.body.projectTeamMembers] 
+//         : [];
+    
+//     const projectData = {
+//       projects_id: projectId,
+//       companyName: req.body.companyName,
+//       projectName: req.body.projectName,
+//       projectLink: req.body.projectLink,
+//       projectType: req.body.projectType,
+//       companyLogo,
+//       mainBanner: mainBannerImages,
+//       projectImages,
+//       shortDescription: req.body.shortDescription,
+//       description: req.body.description,
+//       mainDescription: req.body.mainDescription,
+//       reviewText: req.body.reviewText,
+//       reviewPersonName: req.body.reviewPersonName,
+//       reviewPersonImage,
+//       projectTeamMembers: teamMembers,
+//       teamImages
+//     };
+    
+//     const project = new Project(projectData);
+//     await project.save();
+//     res.status(201).json({
+//       success: true,
+//       data: project
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error'
+//     });
+//   }
+// };
 
 
 
@@ -193,39 +277,50 @@ exports.updateProject = async (req, res) => {
       ? processSingleFilePath(req.files.reviewPersonImage[0])
       : null;
 
-    // Handle existing + new files
-    const updatedMainBanner = mainBannerImages.length > 0
-      ? mainBannerImages
-      : req.body.existingMainBanner
+    // Handle existing images for multiple image fields (ADD new to existing)
+    const updatedMainBanner = [
+      // Keep existing images that weren't deleted
+      ...(req.body.existingMainBanner 
         ? Array.isArray(req.body.existingMainBanner)
           ? req.body.existingMainBanner
           : [req.body.existingMainBanner]
-        : existingProject.mainBanner;
+        : existingProject.mainBanner || []),
+      // Add new uploaded images
+      ...mainBannerImages
+    ];
 
-    const updatedProjectImages = projectImages.length > 0
-      ? projectImages
-      : req.body.existingProjectImages
+    const updatedProjectImages = [
+      // Keep existing images that weren't deleted
+      ...(req.body.existingProjectImages
         ? Array.isArray(req.body.existingProjectImages)
           ? req.body.existingProjectImages
           : [req.body.existingProjectImages]
-        : existingProject.projectImages;
+        : existingProject.projectImages || []),
+      // Add new uploaded images
+      ...projectImages
+    ];
 
-    const updatedTeamImages = teamImages.length > 0
-      ? teamImages
-      : req.body.existingTeamImages
+    const updatedTeamImages = [
+      // Keep existing images that weren't deleted
+      ...(req.body.existingTeamImages
         ? Array.isArray(req.body.existingTeamImages)
           ? req.body.existingTeamImages
           : [req.body.existingTeamImages]
-        : existingProject.teamImages;
+        : existingProject.teamImages || []),
+      // Add new uploaded images
+      ...teamImages
+    ];
 
+    // Handle single images (REPLACE logic)
     const updatedCompanyLogo = companyLogo || req.body.existingCompanyLogo || existingProject.companyLogo;
     const updatedReviewPersonImage = reviewPersonImage || req.body.existingReviewPersonImage || existingProject.reviewPersonImage;
 
+    // Handle team members array
     const teamMembers = Array.isArray(req.body.projectTeamMembers)
       ? req.body.projectTeamMembers
       : req.body.projectTeamMembers
         ? [req.body.projectTeamMembers]
-        : existingProject.projectTeamMembers;
+        : existingProject.projectTeamMembers || [];
 
     // Prepare update data
     const projectData = {
@@ -261,10 +356,11 @@ exports.updateProject = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error updating project:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Server error',
+      error: error.message
     });
   }
 };
@@ -604,3 +700,61 @@ exports.deleteProject = async (req, res) => {
     });
   }
 };
+
+
+
+// Delete specific image by index from project
+exports.deleteImageByIndex = async (req, res) => {
+  try {
+  
+    const { fieldName, index,projects_id  } = req.body;
+
+    // Find the project first
+    const project = await Project.findOne({ projects_id });
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Check if fieldName exists and is an array
+    if (!project[fieldName] || !Array.isArray(project[fieldName])) {
+      return res.status(400).json({
+        success: false,
+        message: `Field ${fieldName} not found or is not an array`
+      });
+    }
+
+    // Check if index is valid
+  
+
+    // Get the file path to delete
+    const fileToDelete = project[fieldName][index];
+    
+    // Remove the image from array
+    project[fieldName].splice(index, 1);
+    
+    // Save the updated project
+    await project.save();
+
+    // Delete the actual file from filesystem
+    if (fileToDelete && fs.existsSync(fileToDelete)) {
+      fs.unlinkSync(fileToDelete);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Image deleted successfully from ${fieldName}`,
+      updatedField: project[fieldName]
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
