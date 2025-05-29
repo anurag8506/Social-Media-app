@@ -27,7 +27,13 @@ const blogs_Schema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  meta_description:{
+    type:String
+  },
+meta_title:{
+  type:String
+}
 });
 
 const Blogs = mongoose.model('Blogs', blogs_Schema); // Changed to 'Blogs' to match content

@@ -8,7 +8,9 @@ const createBlog = async (req, res) => {
       blog_heading,
       blog_short_description,
       blog_type,
-      blog_content
+      blog_content,
+      meta_title,
+      meta_description,
     } = req.body;
 
     // Get just the filenames from uploaded files
@@ -37,6 +39,8 @@ const createBlog = async (req, res) => {
       blog_short_description,
       blog_type,
       blog_content,
+      meta_description,
+      meta_title,
       images: imageFilenames
     });
 
@@ -82,14 +86,14 @@ const getSingleBlog = async (req, res) => {
 const editDataFetch = async (req, res) => {
   try {
     const blog = await Blogs.findOne({ blogs_id: req.params.blogs_id });
-    console.log(req.params.blogs_id  ,"++++++++++++++++++++++++++++++++++++++++++",req.params.blogs_id )
+    console.log(req.params.blogs_id, "++++++++++++++++++++++++++++++++++++++++++", req.params.blogs_id)
     // if (!blog) {
     //   return res.json({ 
     //     success: false, 
     //     message: "Blog not found" 
     //   });
     // }
-    
+
     return res.json({
       blog: {
         blog_title: blog.blog_title,
@@ -97,15 +101,17 @@ const editDataFetch = async (req, res) => {
         blog_short_description: blog.blog_short_description,
         blog_type: blog.blog_type,
         blog_content: blog.blog_content,
-        images: blog.images || []
+        images: blog.images || [],
+        meta_title: blog.meta_title,
+        meta_description:blog.meta_description,
       }
     });
   } catch (err) {
     console.error("Error in editDataFetch:", err);
-    return res.json({ 
-      success: false, 
-      message: "Error fetching blog data", 
-      error: err.message 
+    return res.json({
+      success: false,
+      message: "Error fetching blog data",
+      error: err.message
     });
   }
 };
@@ -117,6 +123,8 @@ const updateBlog = async (req, res) => {
       blog_short_description,
       blog_type,
       blog_content,
+      meta_description,
+      meta_title,
       existingImages = []
     } = req.body;
 
@@ -124,8 +132,8 @@ const updateBlog = async (req, res) => {
     console.log('Uploaded files:', req.files);
 
     // Parse existingImages if it's a string
-    const parsedExistingImages = typeof existingImages === 'string' 
-      ? JSON.parse(existingImages) 
+    const parsedExistingImages = typeof existingImages === 'string'
+      ? JSON.parse(existingImages)
       : existingImages;
 
     // Handle new uploaded files
@@ -145,7 +153,10 @@ const updateBlog = async (req, res) => {
       blog_heading,
       blog_short_description,
       blog_type,
-      blog_content,  // This contains its own images which will render in the content
+      blog_content,
+      meta_description,
+      meta_title,
+      // This contains its own images which will render in the content
       images: uploadedImages  // Only contains explicitly uploaded images
     };
 
@@ -155,17 +166,17 @@ const updateBlog = async (req, res) => {
       { new: true }
     );
 
-    res.json({ 
+    res.json({
       success: true,
-      message: 'Blog updated successfully', 
-      blog: updatedBlog 
+      message: 'Blog updated successfully',
+      blog: updatedBlog
     });
   } catch (err) {
     console.error('Error updating blog:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Error updating blog', 
-      error: err.message 
+      message: 'Error updating blog',
+      error: err.message
     });
   }
 };
@@ -215,5 +226,5 @@ module.exports = {
   updateBlog,
   deleteBlog,
   getSingleBlog,
-  editDataFetch 
+  editDataFetch
 };
