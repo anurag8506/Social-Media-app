@@ -3,6 +3,8 @@ const path=require('path')
 const app = express()
 const adminRoutes = require('./routers/adminRoutes')
 const websiteRoute = require('./routers/apiRoutes')
+const api = require('./routes/api/api')
+const web = require('./routes/api/web')
 const cookieParser = require('cookie-parser');
 const cors = require('cors')
 const connectDB = require('./config/DB');
@@ -42,6 +44,9 @@ app.use("/", express.static(path.join(__dirname, "/public")));
 app.use('/api/admin', adminRoutes)
 
 app.use('/api', websiteRoute)
+
+app.use('/api',api)
+app.use('/api', web)
 
 
 
